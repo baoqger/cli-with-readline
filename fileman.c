@@ -4,6 +4,8 @@
  * */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -26,3 +28,109 @@ typedef struct {
     rl_icpfunc_t *func; // Function to call to do the job
     char *doc;
 } COMMAND;
+
+COMMAND commands[] = {
+    {"cd", com_cd, "Change to directory DIR"},
+    {"delete", com_delete, "Delete FILE"},
+    {"help", com_help, "Display this text"},
+    {"?", com_help, "Synonym for 'help'"},
+    {"list", com_list, "List files in DIR"},
+    {"ls", com_list, "Synonym for 'list'"},
+    {"pwd", com_pwd, "Print the current working directory"},
+    {"quit", com_quit, "Quit using Fileman"},
+    {"rename", com_rename, "Rename FILE to NEWNAME"},
+    {"stat", com_stat, "Print out statistics on FILE"},
+    {"view", com_view, "View the contents of FILE"},
+    {(char*)NULL, (rl_icpfunc_t *)NULL, (char *)NULL}
+};
+
+// Forward declarations
+char* stripwhite();
+COMMAND* find_command();
+
+// The name of this program, as taken from argv[0]
+char *program;
+
+// when non-zero, this global variable means the user is done using this program
+int done;
+
+int main(int argc, char **argv) {
+    char *line, *s;
+
+    program = argv[0];
+
+
+}
+
+
+/*
+ * Interface to Readline Completion
+ * */
+
+char* command_generator(const char*, int);
+char** fileman_completion(const char*, int, int);
+
+/*
+ * Tell the GNU Readline library how to complete. We want to try to complete
+ * on command names if this is the first word in the line, or on filenames if not
+ * */
+void initialize_readline() {
+   // Allow conditional parsing of the /.inputrc file./
+   rl_readline_name = "FileMan";
+
+   // Tell the completeer that we want a crack first
+   rl_attempted_completion_function = fileman_completion;
+}
+
+/*
+ * rl_attempted_completion_function: A pointer to an alternative function to create matches.
+ * The function is called with text, start, end. 
+ * start and end are indices in rl_line_buffer defining the boundaries of text, which is a character string. 
+ * If this function exists and return NULL, or if this variable is set to NULL, then rl_complete() will call the
+ * value of rl_complete_entry_function to generate matches. otherwise the array of strings returned will be used
+ * */
+
+char** fileman_completion(const char *text, int start, int end) {
+    char **matches = NULL;
+    /*
+     * If this word is at the start of the line, then it is a command to complete.
+     * otherwise it is the name of a file in the current directory
+     * */
+    if (start == 0) {
+        matches = rl_completion_matches(text, command_generator);
+    }
+    return matches;
+}
+
+/*
+ * Generator function for command completion. STATE lets us know whether
+ * to start from scratch; without any state (i.e. STATE == 0), then we start at 
+ * the top of the list
+ * */
+
+char* command_generator(const char *text, int state) {
+    static int list_index, len;
+    char *name;
+
+    /*
+     * If this is new word to complete, initialize now.
+     * This includes saving the length of TEXT for efficiency, and initializing 
+     * the index variable to 0
+     * */
+
+    if (!state) {
+        list_index = 0;
+        len = strlen(text);
+    }
+
+    // Return rthe next name which partially matches from the command list
+    while((name = commands[list_index].name) != NULL) {
+        list_index++;
+        if (strncmp(name, text, len) == 0) {
+            return strdup(name);
+        }
+    }
+
+    // If no names matched, then return NULL
+    return NULL;
+}
