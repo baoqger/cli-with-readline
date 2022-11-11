@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -45,8 +46,11 @@ COMMAND commands[] = {
 };
 
 // Forward declarations
-char* stripwhite();
-COMMAND* find_command();
+char* stripwhite(char*);
+COMMAND* find_command(char*);
+void initialize_readline();
+int execute_line(char*);
+
 
 // The name of this program, as taken from argv[0]
 char *program;
@@ -59,12 +63,53 @@ int main(int argc, char **argv) {
 
     program = argv[0];
 
+    initialize_readline(); // bind our completer
+
+    // loop reading and executing lines until the user quits
+    for (; done == 0; ) {
+        line = readline("Fileman: ");
+
+        if (!line) {
+            break;
+        }
+
+        /*
+         * Remove leading and trailing whitespace from the line.
+         * Then, if there is anything left, add it to the history list
+         * and execute it
+         * */
+
+
+    }
+
+    exit(0);
 
 }
 
+// Strip whitespace from the start and end of STRING. Return a pointer to STRING
+char* stripwhite(char *string) {
+    register char *s, *t;
+    
+    // strip the whitespace at the beginning
+    for (s = string; isspace(*s); s++)
+        ;
+
+    // judge whether s already points to the terminated character '\0'
+    if (*s == 0) {
+        return s;
+    }
+
+    t = s + strlen(s) - 1; // t points to the last character in the string
+    // strip the whitespace at the end
+    while(t > s && isspace(*t))
+        t--;
+    *(++t) = '\0'; // same as *(++t) = 0
+
+    return s;
+}
 
 /*
- * Interface to Readline Completion
+ * ***************** Interface to Readline Completion *************************
  * */
 
 char* command_generator(const char*, int);
