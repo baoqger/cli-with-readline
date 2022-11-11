@@ -78,12 +78,73 @@ int main(int argc, char **argv) {
          * Then, if there is anything left, add it to the history list
          * and execute it
          * */
+        s = stripwhite(line);
 
+        if (*s) {
+            add_history(s);
+            execute_line(s);
+        }
+        
+        free(line);
 
     }
 
     exit(0);
 
+}
+/* Execute a command line */
+int execute_line(char *line) {
+    register int i; 
+    COMMAND *command;
+    char *word; 
+    
+    i = 0;
+    // strip the beginning white space
+    while(line[i] && isspace(line[i]))  
+        i++;
+    word = line + i; // point to the first character of command word 
+
+    // move the pointer until the first space or the end('\0') of the string
+    while (line[i] && !isspace(line[i]))
+        i++;
+    
+    // if the pointer reaches whitespace instead of the end
+    // add the terminated char manually 
+    if (line[i]) {
+        line[i++] = '\0';
+    }
+
+    command = find_command(word);
+
+    if (!command) {
+        fprintf(stderr, "%s: No such command for Fileman.\n", word);
+        return -1;
+    }
+
+    // Get the argument to the command if any. Support only one argument.
+    while(isspace(line[i])) 
+        i++;
+
+    word = line + i; // now word points to the first character of argument
+
+    // call the function
+    // return (*(command->func))(word); 
+    return command->func(word);
+}
+
+
+
+// Look up NAME as the name of a command, and return a pointer to that command.
+// Return a NULL pointer if NAME 
+COMMAND* find_command(char *name) {
+    register int i;
+
+    for (i = 0; commands[i].name; i++) {
+        if(strcmp(name, commands[i].name) == 0)
+            return &commands[i];
+    }
+    
+    return NULL; 
 }
 
 // Strip whitespace from the start and end of STRING. Return a pointer to STRING
@@ -179,3 +240,51 @@ char* command_generator(const char *text, int state) {
     // If no names matched, then return NULL
     return NULL;
 }
+
+/*****************************Fileman command*****************************/
+
+// String to pass to system(). This is for LIST, VIEW and RENAME commands
+static char syscom[1024];
+
+// List the file(s) named in arg
+int com_list(char *arg) {
+    if (!arg)
+        arg = "";
+    sprintf(syscom, "ls -FClg %s", arg);
+    return system(syscom);
+}
+
+int com_cd(char *arg) {
+    return 0;
+}
+
+int com_delete(char *arg) {
+    return 0;
+}
+
+
+int com_help (char *arg) {
+    return 0;
+}
+
+int com_pwd(char* arg) {
+    return 0;
+}
+
+int com_quit(char* arg) {
+    return 0;
+}
+
+int com_rename(char *arg) {
+    return 0;
+}
+
+int com_stat(char *arg) {
+    return 0;
+}
+
+int com_view(char *arg) {
+    return 0;
+}
+
+
