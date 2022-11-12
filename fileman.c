@@ -15,7 +15,6 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-extern char* getwd();
 
 /* The names of functions that actually do the manipulation. */
 int com_list(), com_view(), com_rename(), com_stat(), com_pwd();
